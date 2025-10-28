@@ -13,6 +13,12 @@ export { RateLimiter, rateLimit } from './core/rate-limiter.js';
 export { TLSFingerprintManager, TLS_PROFILES, createCustomTLSProfile } from './core/tls-fingerprint.js';
 export { MonitoringSystem, AlertingSystem } from './core/monitoring.js';
 
+// Security features
+export { AuthenticationManager } from './security/auth.js';
+export { AuditLogger } from './security/audit-logger.js';
+export { InputValidator } from './security/input-validator.js';
+export { ComplianceChecker } from './security/compliance.js';
+
 // Types and configuration
 export * from './types/index.js';
 export { defaultConfig } from './config/default.js';
