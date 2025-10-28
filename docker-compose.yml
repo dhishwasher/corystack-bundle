@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Main scraper service
+  scraper:
+    build: .
+    container_name: corystack-scraper
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=info
+      - MAX_CONCURRENT_BROWSERS=3
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+      - ./sessions:/app/sessions
+      - ./.env:/app/.env:ro
+    depends_on:
+      - redis
+    networks:
+      - scraper-network
+    restart: unless-stopped
+    # Override command for custom usage
+    # command: ["node", "dist/cli.js", "test", "https://example.com"]
+
+  # Redis for distributed queue
+  redis:
+    image: redis:7-alpine
+    container_name: corystack-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - scraper-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Worker instance (for distributed scraping)
+  worker:
+    build: .
+    container_name: corystack-worker
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=info
+      - MAX_CONCURRENT_BROWSERS=3
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+      - ./.env:/app/.env:ro
+    depends_on:
+      - redis
+    networks:
+      - scraper-network
+    restart: unless-stopped
+    # Start worker mode
+    command: ["node", "-e", "console.log('Worker ready')"]
+    # Scale workers: docker-compose up --scale worker=3
+
+  # Optional: Redis Commander for monitoring
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: corystack-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - scraper-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+networks:
+  scraper-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

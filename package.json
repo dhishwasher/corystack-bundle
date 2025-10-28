@@ -21,10 +21,29 @@
     "security-testing",
     "penetration-testing",
     "bot-detection",
-    "anti-bot"
+    "anti-bot",
+    "web-scraping",
+    "playwright",
+    "fingerprinting",
+    "security",
+    "testing"
   ],
   "author": "CoryStack Security Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhishwasher/corystack-bundle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dhishwasher/corystack-bundle/issues"
+  },
+  "homepage": "https://github.com/dhishwasher/corystack-bundle#readme",
+  "files": [
+    "dist",
+    "src/types",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "playwright": "^1.40.1",
     "axios": "^1.6.2",
