@@ -21,11 +21,11 @@ export class FingerprintGenerator {
       ? this.randomElement(viewportSizes)
       : viewportSizes[0];
 
-    const platform = this.config.randomizePlatform
+    const platform = this.config.spoofPlatform
       ? this.randomElement(platforms)
       : platforms[0];
 
-    const vendor = this.config.randomizePlatform
+    const vendor = this.config.spoofPlatform
       ? this.randomElement(vendors)
       : vendors[0];
 
@@ -78,8 +78,7 @@ export class FingerprintGenerator {
       delete (window as any).__pw_manual;
     });
 
-    // Set viewport
-    await context.setViewportSize(fingerprint.viewport);
+    // Viewport is set via context options, not needed here
 
     // Inject advanced evasions
     await this.injectCanvasEvasion(context);
@@ -93,10 +92,8 @@ export class FingerprintGenerator {
    * Apply fingerprint to a specific page
    */
   async applyToPage(page: Page, fingerprint: GeneratedFingerprint): Promise<void> {
-    // Set timezone
-    await page.emulateTimezone(fingerprint.timezone);
-
-    // Set locale
+    // Timezone and locale are set via context options
+    // Set locale headers
     await page.setExtraHTTPHeaders({
       'Accept-Language': `${fingerprint.language},en;q=0.9`,
     });
@@ -235,7 +232,7 @@ export class FingerprintGenerator {
    * Inject page-level evasions
    */
   private async injectPageEvasions(page: Page, fingerprint: GeneratedFingerprint): Promise<void> {
-    await page.evaluateOnNewDocument((fp: GeneratedFingerprint) => {
+    await page.addInitScript((fp: GeneratedFingerprint) => {
       // Chrome runtime evasion
       (window as any).chrome = {
         runtime: {},
