@@ -1,3 +1,4 @@
+// Core scraping functionality
 export { StealthScraper } from './core/stealth-scraper.js';
 export { SessionManager } from './core/session-manager.js';
 export { HumanBehaviorSimulator } from './core/behavior.js';
@@ -6,5 +7,12 @@ export { FingerprintGenerator } from './core/fingerprint.js';
 export { ProxyManager } from './core/proxy-manager.js';
 export { VulnerabilityReporter } from './core/vulnerability-reporter.js';
 
+// Advanced features
+export { DistributedQueue } from './core/distributed-queue.js';
+export { RateLimiter, rateLimit } from './core/rate-limiter.js';
+export { TLSFingerprintManager, TLS_PROFILES, createCustomTLSProfile } from './core/tls-fingerprint.js';
+export { MonitoringSystem, AlertingSystem } from './core/monitoring.js';
+
+// Types and configuration
 export * from './types/index.js';
 export { defaultConfig } from './config/default.js';
