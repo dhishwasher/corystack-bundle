@@ -26,6 +26,8 @@ export { FontFingerprintManager, PLATFORM_FONTS } from './advanced/font-fingerpr
 export type { FontCategories } from './advanced/font-fingerprint.js';
 export { ScreenCorrelationManager, SCREEN_PROFILES } from './advanced/screen-correlation.js';
 export type { ScreenProfile } from './advanced/screen-correlation.js';
+export { BatteryManager, BATTERY_PROFILES } from './advanced/battery-spoof.js';
+export type { BatteryProfile } from './advanced/battery-spoof.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';

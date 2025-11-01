@@ -7,6 +7,7 @@ import { GeoTimezoneCorrelator } from '../advanced/geo-timezone-correlator.js';
 import { BrowserTimingManager } from '../advanced/browser-timing.js';
 import { FontFingerprintManager } from '../advanced/font-fingerprint.js';
 import { ScreenCorrelationManager } from '../advanced/screen-correlation.js';
+import { BatteryManager } from '../advanced/battery-spoof.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
@@ -120,6 +121,11 @@ export class SessionManager {
 
     // Apply screen/window correlation
     await screenManager.injectScreenOverrides(context);
+
+    // Apply battery API spoofing
+    const batteryMode = BatteryManager.suggestMode(fingerprint.platform);
+    const batteryManager = new BatteryManager(fingerprint.platform, batteryMode);
+    await batteryManager.injectBatterySpoofing(context);
 
     const session: ScraperSession = {
       id: sessionId,
