@@ -5,6 +5,7 @@ import { ProxyManager } from './proxy-manager.js';
 import { TLSAndHTTP2Manager } from '../advanced/tls-http2-fingerprint.js';
 import { GeoTimezoneCorrelator } from '../advanced/geo-timezone-correlator.js';
 import { BrowserTimingManager } from '../advanced/browser-timing.js';
+import { FontFingerprintManager } from '../advanced/font-fingerprint.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
@@ -104,6 +105,10 @@ export class SessionManager {
 
     // Apply browser timing overrides
     await BrowserTimingManager.injectTimingOverrides(context);
+
+    // Apply font fingerprint protection
+    const fontManager = new FontFingerprintManager(fingerprint.platform);
+    await fontManager.injectFontOverride(context);
 
     const session: ScraperSession = {
       id: sessionId,

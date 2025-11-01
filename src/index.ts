@@ -22,6 +22,8 @@ export { TLSAndHTTP2Manager, TLS_HTTP2_PROFILES } from './advanced/tls-http2-fin
 export type { TLSProfile } from './advanced/tls-http2-fingerprint.js';
 export { GeoTimezoneCorrelator } from './advanced/geo-timezone-correlator.js';
 export { BrowserTimingManager } from './advanced/browser-timing.js';
+export { FontFingerprintManager, PLATFORM_FONTS } from './advanced/font-fingerprint.js';
+export type { FontCategories } from './advanced/font-fingerprint.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
