@@ -16,6 +16,8 @@ export { CaptchaSolver } from './advanced/captcha-solver.js';
 export type { CaptchaSolverConfig, CaptchaTask, CaptchaResult } from './advanced/captcha-solver.js';
 export { ResidentialProxyManager } from './advanced/residential-proxy-manager.js';
 export type { ResidentialProxyProvider, ResidentialProxyConfig } from './advanced/residential-proxy-manager.js';
+export { UserProfileManager } from './advanced/user-profile.js';
+export type { UserProfile, UserBehaviorProfile, ProfileManagerConfig } from './advanced/user-profile.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
