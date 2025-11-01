@@ -4,6 +4,7 @@ import { FingerprintGenerator } from './fingerprint.js';
 import { ProxyManager } from './proxy-manager.js';
 import { TLSAndHTTP2Manager } from '../advanced/tls-http2-fingerprint.js';
 import { GeoTimezoneCorrelator } from '../advanced/geo-timezone-correlator.js';
+import { BrowserTimingManager } from '../advanced/browser-timing.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
@@ -100,6 +101,9 @@ export class SessionManager {
     // Apply TLS/HTTP2 settings
     await this.tlsManager.applyHeaderOrder(context);
     await this.tlsManager.injectHTTP2Settings(context);
+
+    // Apply browser timing overrides
+    await BrowserTimingManager.injectTimingOverrides(context);
 
     const session: ScraperSession = {
       id: sessionId,
