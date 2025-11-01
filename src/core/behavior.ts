@@ -2,12 +2,74 @@ import type { Page } from 'playwright';
 import type { BehaviorConfig } from '../types/index.js';
 import BezierEasing from 'bezier-easing';
 
+/**
+ * QWERTY keyboard layout proximity map
+ * Maps each key to its adjacent keys for realistic typos
+ */
+const QWERTY_PROXIMITY: Record<string, string[]> = {
+  'q': ['w', 'a', 's'],
+  'w': ['q', 'e', 'a', 's', 'd'],
+  'e': ['w', 'r', 's', 'd', 'f'],
+  'r': ['e', 't', 'd', 'f', 'g'],
+  't': ['r', 'y', 'f', 'g', 'h'],
+  'y': ['t', 'u', 'g', 'h', 'j'],
+  'u': ['y', 'i', 'h', 'j', 'k'],
+  'i': ['u', 'o', 'j', 'k', 'l'],
+  'o': ['i', 'p', 'k', 'l'],
+  'p': ['o', 'l'],
+  'a': ['q', 'w', 's', 'z', 'x'],
+  's': ['q', 'w', 'e', 'a', 'd', 'z', 'x', 'c'],
+  'd': ['w', 'e', 'r', 's', 'f', 'x', 'c', 'v'],
+  'f': ['e', 'r', 't', 'd', 'g', 'c', 'v', 'b'],
+  'g': ['r', 't', 'y', 'f', 'h', 'v', 'b', 'n'],
+  'h': ['t', 'y', 'u', 'g', 'j', 'b', 'n', 'm'],
+  'j': ['y', 'u', 'i', 'h', 'k', 'n', 'm'],
+  'k': ['u', 'i', 'o', 'j', 'l', 'm'],
+  'l': ['i', 'o', 'p', 'k'],
+  'z': ['a', 's', 'x'],
+  'x': ['a', 's', 'd', 'z', 'c'],
+  'c': ['s', 'd', 'f', 'x', 'v'],
+  'v': ['d', 'f', 'g', 'c', 'b'],
+  'b': ['f', 'g', 'h', 'v', 'n'],
+  'n': ['g', 'h', 'j', 'b', 'm'],
+  'm': ['h', 'j', 'k', 'n'],
+  '1': ['2', 'q'],
+  '2': ['1', '3', 'q', 'w'],
+  '3': ['2', '4', 'w', 'e'],
+  '4': ['3', '5', 'e', 'r'],
+  '5': ['4', '6', 'r', 't'],
+  '6': ['5', '7', 't', 'y'],
+  '7': ['6', '8', 'y', 'u'],
+  '8': ['7', '9', 'u', 'i'],
+  '9': ['8', '0', 'i', 'o'],
+  '0': ['9', 'o', 'p'],
+};
+
 export class HumanBehaviorSimulator {
   private config: BehaviorConfig;
   private currentMousePosition: { x: number; y: number } | null = null;
 
   constructor(config: BehaviorConfig) {
     this.config = config;
+  }
+
+  /**
+   * Get a random adjacent key based on QWERTY keyboard proximity
+   */
+  private getAdjacentKey(char: string): string {
+    const lowerChar = char.toLowerCase();
+    const adjacent = QWERTY_PROXIMITY[lowerChar];
+
+    if (!adjacent || adjacent.length === 0) {
+      // Fallback to charCode + 1 for special characters
+      return String.fromCharCode(char.charCodeAt(0) + 1);
+    }
+
+    // Return random adjacent key
+    const typo = adjacent[Math.floor(Math.random() * adjacent.length)];
+
+    // Preserve case
+    return char === char.toUpperCase() ? typo.toUpperCase() : typo;
   }
 
   /**
@@ -165,9 +227,9 @@ export class HumanBehaviorSimulator {
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
 
-      // Occasionally make a typo and correct it
+      // Occasionally make a typo and correct it (QWERTY-based)
       if (this.config.naturalErrors && Math.random() < 0.05 && i > 0) {
-        const wrongChar = String.fromCharCode(char.charCodeAt(0) + 1);
+        const wrongChar = this.getAdjacentKey(char);
         await page.keyboard.type(wrongChar);
         await this.randomDelay(100, 300);
         await page.keyboard.press('Backspace');
@@ -200,7 +262,7 @@ export class HumanBehaviorSimulator {
   }
 
   /**
-   * Scroll page with human-like behavior
+   * Scroll page with human-like behavior using quantized wheel steps
    */
   async scrollHumanLike(page: Page, direction: 'down' | 'up' = 'down'): Promise<void> {
     if (!this.config.randomScrolling) {
@@ -213,7 +275,14 @@ export class HumanBehaviorSimulator {
     const scrolls = Math.floor(Math.random() * 3) + 2; // 2-5 scroll actions
 
     for (let i = 0; i < scrolls; i++) {
-      const amount = this.randomRange(100, 400);
+      // Mouse wheel scrolling is quantized to ~120 pixel steps (or multiples)
+      // Real users typically scroll 1-3 wheel "clicks" at a time
+      const wheelClicks = Math.floor(Math.random() * 3) + 1; // 1-3 clicks
+      const pixelsPerClick = 120; // Standard wheel delta
+
+      // Add slight variance to simulate different wheel sensitivities
+      const variance = Math.random() * 20 - 10; // ±10 pixels
+      const amount = (wheelClicks * pixelsPerClick) + variance;
       const delta = direction === 'down' ? amount : -amount;
 
       // Use mouse wheel for more realistic scrolling
