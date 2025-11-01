@@ -41,6 +41,32 @@ export class HumanBehaviorSimulator {
   }
 
   /**
+   * Generate a randomized Bezier curve for natural mouse movement
+   */
+  private generateRandomBezierCurve(): (t: number) => number {
+    // Randomize Bezier curve parameters for each movement
+    // Using realistic ranges that produce natural-looking curves
+    const curves = [
+      // Standard ease-in-out variations
+      [0.25 + (Math.random() - 0.5) * 0.1, 0.1 + (Math.random() - 0.5) * 0.1, 0.25 + (Math.random() - 0.5) * 0.1, 1.0],
+      // Slow start, fast end
+      [0.42 + (Math.random() - 0.5) * 0.1, 0, 0.58 + (Math.random() - 0.5) * 0.1, 1],
+      // Fast start, slow end
+      [0.42 + (Math.random() - 0.5) * 0.1, 0, 1, 0.58 + (Math.random() - 0.5) * 0.1],
+      // Elastic-like (slight overshoot)
+      [0.68 + (Math.random() - 0.5) * 0.1, -0.05 + Math.random() * 0.1, 0.265 + (Math.random() - 0.5) * 0.1, 1.05 + Math.random() * 0.1],
+    ];
+
+    const selectedCurve = curves[Math.floor(Math.random() * curves.length)];
+    return BezierEasing(
+      selectedCurve[0],
+      selectedCurve[1],
+      selectedCurve[2],
+      selectedCurve[3]
+    );
+  }
+
+  /**
    * Simulate human-like mouse movement from point A to B
    */
   async moveMouseHumanLike(
@@ -57,7 +83,7 @@ export class HumanBehaviorSimulator {
     }
 
     const steps = Math.floor(Math.random() * 20) + 30; // 30-50 steps
-    const easing = BezierEasing(0.25, 0.1, 0.25, 1.0); // Ease-in-out curve
+    const easing = this.generateRandomBezierCurve(); // Randomized curve per movement
 
     for (let i = 0; i <= steps; i++) {
       const progress = easing(i / steps);
