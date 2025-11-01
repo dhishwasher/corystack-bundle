@@ -68,6 +68,9 @@ describe('FingerprintGenerator', () => {
         randomizeViewport: false,
         randomizeTimezone: false,
         randomizeLocale: false,
+        spoofPlatform: false, // Disable platform randomization for consistency
+        spoofHardwareConcurrency: false,
+        spoofDeviceMemory: false,
       };
 
       const staticGenerator = new FingerprintGenerator(staticConfig);
@@ -78,6 +81,7 @@ describe('FingerprintGenerator', () => {
       expect(fp1.viewport).toEqual(fp2.viewport);
       expect(fp1.timezone).toBe(fp2.timezone);
       expect(fp1.language).toBe(fp2.language);
+      expect(fp1.platform).toBe(fp2.platform);
     });
 
     it('should generate valid viewport dimensions', () => {

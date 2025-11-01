@@ -118,6 +118,7 @@ export interface GeneratedFingerprint {
   hardwareConcurrency: number;
   deviceMemory: number;
   plugins: string[];
+  webglRenderer: { vendor: string; renderer: string };
 }
 
 export interface Detection {

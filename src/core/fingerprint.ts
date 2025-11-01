@@ -1,6 +1,158 @@
 import type { BrowserContext, Page } from 'playwright';
 import type { GeneratedFingerprint, FingerprintConfig } from '../types/index.js';
-import { chromeUserAgents, viewportSizes, timezones, locales, platforms, vendors } from '../config/default.js';
+import { viewportSizes, timezones, locales } from '../config/default.js';
+
+/**
+ * Platform-specific profile for correlated fingerprinting
+ */
+interface PlatformProfile {
+  platform: string;
+  userAgents: string[];
+  vendor: string;
+  fonts: string[];
+  plugins: string[];
+  webglRenderers: Array<{ vendor: string; renderer: string }>;
+  hardwareConcurrency: { min: number; max: number };
+  deviceMemory: number[];
+  screenResolutions: Array<{ width: number; height: number }>;
+}
+
+/**
+ * Comprehensive platform profiles with correlated fingerprint elements
+ */
+const platformProfiles: PlatformProfile[] = [
+  // Windows Platform Profile
+  {
+    platform: 'Win32',
+    userAgents: [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ],
+    vendor: 'Google Inc.',
+    fonts: [
+      'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Cambria Math', 'Comic Sans MS',
+      'Consolas', 'Courier', 'Courier New', 'Georgia', 'Helvetica', 'Impact',
+      'Lucida Console', 'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Palatino Linotype',
+      'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+    ],
+    plugins: [
+      'PDF Viewer',
+      'Chrome PDF Viewer',
+      'Chromium PDF Viewer',
+      'Microsoft Edge PDF Viewer',
+      'WebKit built-in PDF',
+    ],
+    webglRenderers: [
+      { vendor: 'Google Inc. (NVIDIA)', renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (NVIDIA)', renderer: 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Ti Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (NVIDIA)', renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (Intel)', renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (Intel)', renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (AMD)', renderer: 'ANGLE (AMD, AMD Radeon RX 6600 Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+      { vendor: 'Google Inc. (AMD)', renderer: 'ANGLE (AMD, AMD Radeon RX 5700 XT Direct3D11 vs_5_0 ps_5_0, D3D11)' },
+    ],
+    hardwareConcurrency: { min: 4, max: 16 },
+    deviceMemory: [4, 8, 16, 32],
+    screenResolutions: [
+      { width: 1920, height: 1080 },
+      { width: 1366, height: 768 },
+      { width: 1536, height: 864 },
+      { width: 1440, height: 900 },
+      { width: 2560, height: 1440 },
+    ],
+  },
+  // macOS Platform Profile
+  {
+    platform: 'MacIntel',
+    userAgents: [
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    ],
+    vendor: 'Google Inc.',
+    fonts: [
+      'American Typewriter', 'Andale Mono', 'Arial', 'Arial Black', 'Arial Narrow', 'Arial Rounded MT Bold',
+      'Arial Unicode MS', 'Avenir', 'Avenir Next', 'Baskerville', 'Big Caslon', 'Bodoni 72',
+      'Bradley Hand', 'Brush Script MT', 'Chalkboard', 'Chalkboard SE', 'Comic Sans MS', 'Copperplate',
+      'Courier', 'Courier New', 'Didot', 'Futura', 'Geneva', 'Georgia', 'Gill Sans', 'Helvetica',
+      'Helvetica Neue', 'Herculanum', 'Impact', 'Lucida Grande', 'Luminari', 'Marker Felt',
+      'Monaco', 'Optima', 'Palatino', 'Papyrus', 'Phosphate', 'Rockwell', 'SF Pro Display',
+      'SF Pro Text', 'SignPainter', 'Skia', 'Snell Roundhand', 'Tahoma', 'Times', 'Times New Roman',
+      'Trattatello', 'Trebuchet MS', 'Verdana', 'Zapfino',
+    ],
+    plugins: [
+      'PDF Viewer',
+      'Chrome PDF Viewer',
+      'Chromium PDF Viewer',
+      'Microsoft Edge PDF Viewer',
+      'WebKit built-in PDF',
+    ],
+    webglRenderers: [
+      { vendor: 'Intel Inc.', renderer: 'Intel(R) Iris(TM) Plus Graphics 640' },
+      { vendor: 'Intel Inc.', renderer: 'Intel(R) Iris(TM) Plus Graphics 655' },
+      { vendor: 'Intel Inc.', renderer: 'Intel(R) UHD Graphics 630' },
+      { vendor: 'Apple Inc.', renderer: 'Apple M1' },
+      { vendor: 'Apple Inc.', renderer: 'Apple M2' },
+      { vendor: 'Apple Inc.', renderer: 'Apple M1 Pro' },
+      { vendor: 'AMD', renderer: 'AMD Radeon Pro 5500M' },
+      { vendor: 'AMD', renderer: 'AMD Radeon Pro 5300M' },
+    ],
+    hardwareConcurrency: { min: 4, max: 12 },
+    deviceMemory: [8, 16, 32],
+    screenResolutions: [
+      { width: 1440, height: 900 },
+      { width: 1680, height: 1050 },
+      { width: 1920, height: 1080 },
+      { width: 2560, height: 1440 },
+      { width: 2560, height: 1600 },
+      { width: 2880, height: 1800 },
+    ],
+  },
+  // Linux Platform Profile
+  {
+    platform: 'Linux x86_64',
+    userAgents: [
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ],
+    vendor: 'Google Inc.',
+    fonts: [
+      'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'DejaVu Sans', 'DejaVu Sans Mono',
+      'DejaVu Serif', 'Droid Sans', 'Droid Serif', 'FreeMono', 'FreeSans', 'FreeSerif',
+      'Georgia', 'Liberation Mono', 'Liberation Sans', 'Liberation Serif', 'Noto Sans',
+      'Noto Serif', 'Times New Roman', 'Ubuntu', 'Ubuntu Mono', 'Verdana',
+    ],
+    plugins: [
+      'PDF Viewer',
+      'Chrome PDF Viewer',
+      'Chromium PDF Viewer',
+      'Microsoft Edge PDF Viewer',
+      'WebKit built-in PDF',
+    ],
+    webglRenderers: [
+      { vendor: 'Intel', renderer: 'Mesa Intel(R) UHD Graphics 630 (CML GT2)' },
+      { vendor: 'Intel', renderer: 'Mesa Intel(R) HD Graphics 620 (KBL GT2)' },
+      { vendor: 'NVIDIA Corporation', renderer: 'NVIDIA GeForce GTX 1660 Ti/PCIe/SSE2' },
+      { vendor: 'NVIDIA Corporation', renderer: 'NVIDIA GeForce RTX 3060/PCIe/SSE2' },
+      { vendor: 'AMD', renderer: 'AMD Radeon RX 6600 (NAVI23, DRM 3.49.0, 6.2.0-26-generic, LLVM 15.0.7)' },
+      { vendor: 'AMD', renderer: 'AMD Radeon RX 5700 XT (NAVI10, DRM 3.49.0, 6.2.0-26-generic, LLVM 15.0.7)' },
+    ],
+    hardwareConcurrency: { min: 4, max: 32 },
+    deviceMemory: [4, 8, 16, 32, 64],
+    screenResolutions: [
+      { width: 1920, height: 1080 },
+      { width: 1366, height: 768 },
+      { width: 2560, height: 1440 },
+      { width: 1440, height: 900 },
+      { width: 3840, height: 2160 },
+    ],
+  },
+];
 
 export class FingerprintGenerator {
   private config: FingerprintConfig;
@@ -10,24 +162,22 @@ export class FingerprintGenerator {
   }
 
   /**
-   * Generate a complete fingerprint profile
+   * Generate a complete fingerprint profile with platform correlation
    */
   generate(): GeneratedFingerprint {
+    // Select platform profile first - this is the key to correlation
+    const platformProfile = this.config.spoofPlatform
+      ? this.randomElement(platformProfiles)
+      : platformProfiles[0]; // Default to Windows
+
+    // All subsequent values are correlated to the selected platform
     const userAgent = this.config.randomizeUserAgent
-      ? this.randomElement(chromeUserAgents)
-      : chromeUserAgents[0];
+      ? this.randomElement(platformProfile.userAgents)
+      : platformProfile.userAgents[0];
 
     const viewport = this.config.randomizeViewport
-      ? this.randomElement(viewportSizes)
-      : viewportSizes[0];
-
-    const platform = this.config.spoofPlatform
-      ? this.randomElement(platforms)
-      : platforms[0];
-
-    const vendor = this.config.spoofPlatform
-      ? this.randomElement(vendors)
-      : vendors[0];
+      ? this.randomElement(platformProfile.screenResolutions)
+      : platformProfile.screenResolutions[0];
 
     const language = this.config.randomizeLocale
       ? this.randomElement(locales)
@@ -38,27 +188,41 @@ export class FingerprintGenerator {
       : timezones[0];
 
     const hardwareConcurrency = this.config.spoofHardwareConcurrency
-      ? this.randomInt(4, 16)
-      : 8;
+      ? this.randomInt(platformProfile.hardwareConcurrency.min, platformProfile.hardwareConcurrency.max)
+      : platformProfile.hardwareConcurrency.min;
 
     const deviceMemory = this.config.spoofDeviceMemory
-      ? this.randomElement([4, 8, 16, 32])
-      : 8;
+      ? this.randomElement(platformProfile.deviceMemory)
+      : platformProfile.deviceMemory[0];
+
+    // Select WebGL renderer from platform-specific pool
+    const webglRenderer = this.randomElement(platformProfile.webglRenderers);
+
+    // Generate realistic fonts for this platform
+    const fonts = this.config.randomizeFonts
+      ? this.generateFontList(platformProfile.fonts)
+      : platformProfile.fonts;
+
+    // Generate realistic plugins for this platform
+    const plugins = this.config.spoofPlugins
+      ? this.generatePluginList(platformProfile.plugins)
+      : platformProfile.plugins;
 
     return {
       userAgent,
       viewport,
-      platform,
-      vendor,
+      platform: platformProfile.platform,
+      vendor: platformProfile.vendor,
       language,
       timezone,
       canvasFingerprint: this.generateCanvasFingerprint(),
       webglFingerprint: this.generateWebGLFingerprint(),
       audioFingerprint: this.generateAudioFingerprint(),
-      fonts: this.generateFontList(),
+      fonts,
       hardwareConcurrency,
       deviceMemory,
-      plugins: this.generatePluginList(),
+      plugins,
+      webglRenderer, // Add WebGL renderer to fingerprint
     };
   }
 
@@ -81,8 +245,8 @@ export class FingerprintGenerator {
     // Viewport is set via context options, not needed here
 
     // Inject advanced evasions
-    await this.injectCanvasEvasion(context);
-    await this.injectWebGLEvasion(context);
+    await this.injectCanvasEvasion(context, fingerprint.canvasFingerprint);
+    await this.injectWebGLEvasion(context, fingerprint.webglRenderer);
     await this.injectAudioEvasion(context);
     await this.injectWebRTCEvasion(context);
     await this.injectNavigatorEvasion(context, fingerprint);
@@ -103,23 +267,54 @@ export class FingerprintGenerator {
   }
 
   /**
-   * Inject canvas fingerprint evasion
+   * Inject canvas fingerprint evasion with content-based seeding
    */
-  private async injectCanvasEvasion(context: BrowserContext): Promise<void> {
+  private async injectCanvasEvasion(context: BrowserContext, canvasSeed: string): Promise<void> {
     if (!this.config.randomizeCanvas) return;
 
-    await context.addInitScript(() => {
+    await context.addInitScript((seed: string) => {
       const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
       const originalToBlob = HTMLCanvasElement.prototype.toBlob;
       const originalGetImageData = CanvasRenderingContext2D.prototype.getImageData;
 
-      // Add noise to canvas
+      // Simple hash function for consistent seeding
+      const hashString = (str: string): number => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash);
+      };
+
+      // Seeded random number generator
+      const seededRandom = (seed: number): () => number => {
+        let state = seed;
+        return () => {
+          state = (state * 1664525 + 1013904223) % 4294967296;
+          return state / 4294967296;
+        };
+      };
+
+      // Add noise to canvas using content-based seeding
       const addNoise = (canvas: HTMLCanvasElement) => {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          // Generate seed from canvas content + global seed
+          let contentHash = 0;
+          for (let i = 0; i < Math.min(imageData.data.length, 1000); i += 4) {
+            contentHash += imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
+          }
+          const combinedSeed = hashString(seed + contentHash.toString());
+          const rng = seededRandom(combinedSeed);
+
+          // Apply consistent noise based on content
           for (let i = 0; i < imageData.data.length; i += 4) {
-            imageData.data[i] = imageData.data[i] ^ Math.floor(Math.random() * 3);
+            const noise = Math.floor(rng() * 3);
+            imageData.data[i] = imageData.data[i] ^ noise;
           }
           ctx.putImageData(imageData, 0, 0);
         }
@@ -137,32 +332,56 @@ export class FingerprintGenerator {
 
       CanvasRenderingContext2D.prototype.getImageData = function (...args) {
         const imageData = originalGetImageData.apply(this, args);
+
+        // Generate seed from content
+        let contentHash = 0;
+        for (let i = 0; i < Math.min(imageData.data.length, 1000); i += 4) {
+          contentHash += imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
+        }
+        const combinedSeed = hashString(seed + contentHash.toString());
+        const rng = seededRandom(combinedSeed);
+
         for (let i = 0; i < imageData.data.length; i += 4) {
-          imageData.data[i] = imageData.data[i] ^ Math.floor(Math.random() * 3);
+          const noise = Math.floor(rng() * 3);
+          imageData.data[i] = imageData.data[i] ^ noise;
         }
         return imageData;
       };
-    });
+    }, canvasSeed);
   }
 
   /**
-   * Inject WebGL fingerprint evasion
+   * Inject WebGL fingerprint evasion with platform-correlated renderer
    */
-  private async injectWebGLEvasion(context: BrowserContext): Promise<void> {
+  private async injectWebGLEvasion(context: BrowserContext, webglRenderer: { vendor: string; renderer: string }): Promise<void> {
     if (!this.config.randomizeWebGL) return;
 
-    await context.addInitScript(() => {
+    await context.addInitScript((renderer) => {
       const getParameter = WebGLRenderingContext.prototype.getParameter;
+      const getParameter2 = WebGL2RenderingContext.prototype.getParameter;
+
+      // Override WebGL 1.0
       WebGLRenderingContext.prototype.getParameter = function (parameter) {
         if (parameter === 37445) { // UNMASKED_VENDOR_WEBGL
-          return 'Intel Inc.';
+          return renderer.vendor;
         }
         if (parameter === 37446) { // UNMASKED_RENDERER_WEBGL
-          return 'Intel Iris OpenGL Engine';
+          return renderer.renderer;
         }
         return getParameter.apply(this, [parameter]);
       };
-    });
+
+      // Override WebGL 2.0
+      WebGL2RenderingContext.prototype.getParameter = function (parameter) {
+        if (parameter === 37445) { // UNMASKED_VENDOR_WEBGL
+          return renderer.vendor;
+        }
+        if (parameter === 37446) { // UNMASKED_RENDERER_WEBGL
+          return renderer.renderer;
+        }
+        return getParameter2.apply(this, [parameter]);
+      };
+    }, webglRenderer);
   }
 
   /**
@@ -290,37 +509,30 @@ export class FingerprintGenerator {
   }
 
   /**
-   * Generate font list
+   * Generate realistic font list based on platform
    */
-  private generateFontList(): string[] {
-    const commonFonts = [
-      'Arial', 'Verdana', 'Helvetica', 'Times New Roman',
-      'Courier New', 'Georgia', 'Palatino', 'Garamond',
-      'Comic Sans MS', 'Trebuchet MS', 'Impact',
-    ];
-
+  private generateFontList(platformFonts: string[]): string[] {
     if (this.config.randomizeFonts) {
-      return commonFonts.filter(() => Math.random() > 0.3);
+      // Randomly remove 10-30% of fonts to create variance
+      const removePercentage = 0.1 + Math.random() * 0.2;
+      return platformFonts.filter(() => Math.random() > removePercentage);
     }
 
-    return commonFonts;
+    return platformFonts;
   }
 
   /**
-   * Generate plugin list
+   * Generate realistic plugin list based on platform
    */
-  private generatePluginList(): string[] {
-    const plugins = [
-      'Chrome PDF Plugin',
-      'Chrome PDF Viewer',
-      'Native Client',
-    ];
-
+  private generatePluginList(platformPlugins: string[]): string[] {
     if (this.config.spoofPlugins) {
-      return plugins.filter(() => Math.random() > 0.2);
+      // Randomly remove 0-2 plugins to create variance
+      const removeCount = Math.floor(Math.random() * 3);
+      const shuffled = [...platformPlugins].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, platformPlugins.length - removeCount);
     }
 
-    return plugins;
+    return platformPlugins;
   }
 
   /**
