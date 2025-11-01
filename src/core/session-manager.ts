@@ -8,6 +8,7 @@ import { BrowserTimingManager } from '../advanced/browser-timing.js';
 import { FontFingerprintManager } from '../advanced/font-fingerprint.js';
 import { ScreenCorrelationManager } from '../advanced/screen-correlation.js';
 import { BatteryManager } from '../advanced/battery-spoof.js';
+import { ProfileRecyclingManager } from '../advanced/profile-recycling.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {

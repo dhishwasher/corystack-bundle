@@ -29,6 +29,8 @@ export type { ScreenProfile } from './advanced/screen-correlation.js';
 export { BatteryManager, BATTERY_PROFILES } from './advanced/battery-spoof.js';
 export type { BatteryProfile } from './advanced/battery-spoof.js';
 export { generateRealisticHashes, generateRealisticCanvasHash, generateRealisticWebGLHash, generateRealisticAudioHash } from './advanced/realistic-hashes.js';
+export { ProfileRecyclingManager } from './advanced/profile-recycling.js';
+export type { BrowserProfile, ProfileRecyclingConfig } from './advanced/profile-recycling.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
