@@ -2,12 +2,14 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 import type { ScraperSession, GeneratedFingerprint, Proxy, Detection, StealthConfig } from '../types/index.js';
 import { FingerprintGenerator } from './fingerprint.js';
 import { ProxyManager } from './proxy-manager.js';
+import { TLSAndHTTP2Manager } from '../advanced/tls-http2-fingerprint.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
   private sessions: Map<string, ScraperSession> = new Map();
   private fingerprintGenerator: FingerprintGenerator;
   private proxyManager: ProxyManager | null = null;
+  private tlsManager: TLSAndHTTP2Manager;
   private config: StealthConfig;
   private maxSessions: number;
 
@@ -15,6 +17,7 @@ export class SessionManager {
     this.config = config;
     this.maxSessions = maxSessions;
     this.fingerprintGenerator = new FingerprintGenerator(config.fingerprint);
+    this.tlsManager = new TLSAndHTTP2Manager('chrome-120-windows');
 
     if (config.network.proxyEnabled && config.network.proxyList.length > 0) {
       this.proxyManager = new ProxyManager(
@@ -49,15 +52,7 @@ export class SessionManager {
     // Launch browser with proxy if available
     const launchOptions: any = {
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor',
-      ],
+      args: this.tlsManager.getBrowserLaunchArgs(),
     };
 
     if (proxy) {
@@ -85,6 +80,10 @@ export class SessionManager {
 
     // Apply fingerprint evasions
     await this.fingerprintGenerator.applyToContext(context, fingerprint);
+
+    // Apply TLS/HTTP2 settings
+    await this.tlsManager.applyHeaderOrder(context);
+    await this.tlsManager.injectHTTP2Settings(context);
 
     const session: ScraperSession = {
       id: sessionId,
