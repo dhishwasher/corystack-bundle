@@ -1,11 +1,19 @@
 import type { Page } from 'playwright';
 import type { Detection, DetectionConfig } from '../types/index.js';
+import { CaptchaSolver } from '../advanced/captcha-solver.js';
+import type { CaptchaSolverConfig } from '../advanced/captcha-solver.js';
 
 export class BotDetectionAnalyzer {
   private config: DetectionConfig;
+  private captchaSolver?: CaptchaSolver;
 
-  constructor(config: DetectionConfig) {
+  constructor(config: DetectionConfig, captchaSolverConfig?: CaptchaSolverConfig) {
     this.config = config;
+
+    // Initialize CAPTCHA solver if API key is provided
+    if (config.captchaServiceApiKey && captchaSolverConfig) {
+      this.captchaSolver = new CaptchaSolver(captchaSolverConfig);
+    }
   }
 
   /**
@@ -44,12 +52,44 @@ export class BotDetectionAnalyzer {
     const generic = await this.detectGenericChallenges(page);
     detections.push(...generic);
 
+    // Auto-solve CAPTCHAs if enabled
+    if (this.config.autoBypass && this.captchaSolver) {
+      const captchaDetections = detections.filter(d => d.type === 'captcha');
+      if (captchaDetections.length > 0) {
+        await this.solveCaptcha(page);
+      }
+    }
+
     // Enrich all detections with URL and timestamp
     return detections.map(d => ({
       ...d,
       url,
       timestamp: Date.now(),
     }));
+  }
+
+  /**
+   * Auto-solve CAPTCHA on page
+   */
+  async solveCaptcha(page: Page): Promise<boolean> {
+    if (!this.captchaSolver) {
+      throw new Error('CAPTCHA solver not configured');
+    }
+
+    try {
+      const result = await this.captchaSolver.autoSolve(page);
+
+      if (result.success) {
+        // Wait for form submission or navigation
+        await page.waitForTimeout(2000);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('CAPTCHA solving failed:', error);
+      return false;
+    }
   }
 
   /**

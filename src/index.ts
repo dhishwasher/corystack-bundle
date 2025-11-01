@@ -12,6 +12,8 @@ export { DistributedQueue } from './core/distributed-queue.js';
 export { RateLimiter, rateLimit } from './core/rate-limiter.js';
 export { TLSFingerprintManager, TLS_PROFILES, createCustomTLSProfile } from './core/tls-fingerprint.js';
 export { MonitoringSystem, AlertingSystem } from './core/monitoring.js';
+export { CaptchaSolver } from './advanced/captcha-solver.js';
+export type { CaptchaSolverConfig, CaptchaTask, CaptchaResult } from './advanced/captcha-solver.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
