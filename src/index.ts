@@ -28,6 +28,7 @@ export { ScreenCorrelationManager, SCREEN_PROFILES } from './advanced/screen-cor
 export type { ScreenProfile } from './advanced/screen-correlation.js';
 export { BatteryManager, BATTERY_PROFILES } from './advanced/battery-spoof.js';
 export type { BatteryProfile } from './advanced/battery-spoof.js';
+export { generateRealisticHashes, generateRealisticCanvasHash, generateRealisticWebGLHash, generateRealisticAudioHash } from './advanced/realistic-hashes.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';

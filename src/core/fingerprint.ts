@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from 'playwright';
 import type { GeneratedFingerprint, FingerprintConfig } from '../types/index.js';
 import { viewportSizes, timezones, locales } from '../config/default.js';
+import { generateRealisticHashes } from '../advanced/realistic-hashes.js';
 
 /**
  * Platform-specific profile for correlated fingerprinting
@@ -208,6 +209,13 @@ export class FingerprintGenerator {
       ? this.generatePluginList(platformProfile.plugins)
       : platformProfile.plugins;
 
+    // Generate realistic hardware-based fingerprint hashes
+    const realisticHashes = generateRealisticHashes(
+      platformProfile.platform,
+      webglRenderer,
+      userAgent
+    );
+
     return {
       userAgent,
       viewport,
@@ -215,9 +223,9 @@ export class FingerprintGenerator {
       vendor: platformProfile.vendor,
       language,
       timezone,
-      canvasFingerprint: this.generateCanvasFingerprint(),
-      webglFingerprint: this.generateWebGLFingerprint(),
-      audioFingerprint: this.generateAudioFingerprint(),
+      canvasFingerprint: realisticHashes.canvas,
+      webglFingerprint: realisticHashes.webgl,
+      audioFingerprint: realisticHashes.audio,
       fonts,
       hardwareConcurrency,
       deviceMemory,
@@ -623,27 +631,6 @@ export class FingerprintGenerator {
         },
       });
     }, fingerprint);
-  }
-
-  /**
-   * Generate canvas fingerprint
-   */
-  private generateCanvasFingerprint(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  /**
-   * Generate WebGL fingerprint
-   */
-  private generateWebGLFingerprint(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  /**
-   * Generate audio fingerprint
-   */
-  private generateAudioFingerprint(): string {
-    return Math.random().toString(36).substring(2, 15);
   }
 
   /**
