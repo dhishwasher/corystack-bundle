@@ -4,9 +4,40 @@ import BezierEasing from 'bezier-easing';
 
 export class HumanBehaviorSimulator {
   private config: BehaviorConfig;
+  private currentMousePosition: { x: number; y: number } | null = null;
 
   constructor(config: BehaviorConfig) {
     this.config = config;
+  }
+
+  /**
+   * Get current mouse position, initializing if needed
+   */
+  private getCurrentMousePosition(viewport?: { width: number; height: number }): { x: number; y: number } {
+    if (!this.currentMousePosition) {
+      // Initialize to a realistic starting position (not 0,0 which is suspicious)
+      const width = viewport?.width || 1920;
+      const height = viewport?.height || 1080;
+      this.currentMousePosition = {
+        x: Math.floor(Math.random() * (width * 0.6) + width * 0.2), // 20-80% of width
+        y: Math.floor(Math.random() * (height * 0.6) + height * 0.2), // 20-80% of height
+      };
+    }
+    return this.currentMousePosition;
+  }
+
+  /**
+   * Update tracked mouse position
+   */
+  private updateMousePosition(x: number, y: number): void {
+    this.currentMousePosition = { x, y };
+  }
+
+  /**
+   * Reset mouse position (useful when navigating to new page)
+   */
+  resetMousePosition(): void {
+    this.currentMousePosition = null;
   }
 
   /**
@@ -21,6 +52,7 @@ export class HumanBehaviorSimulator {
   ): Promise<void> {
     if (!this.config.humanMouseMovements) {
       await page.mouse.move(toX, toY);
+      this.updateMousePosition(toX, toY);
       return;
     }
 
@@ -45,6 +77,9 @@ export class HumanBehaviorSimulator {
 
     // Final correction to exact position
     await page.mouse.move(toX, toY);
+
+    // Update tracked position
+    this.updateMousePosition(toX, toY);
   }
 
   /**
@@ -58,25 +93,31 @@ export class HumanBehaviorSimulator {
       throw new Error(`Element not found or not visible: ${selector}`);
     }
 
+    // Get viewport for initial position
+    const viewport = page.viewportSize() || { width: 1920, height: 1080 };
+
     // Random point within the element (not always center)
     const targetX = box.x + box.width * (0.3 + Math.random() * 0.4);
     const targetY = box.y + box.height * (0.3 + Math.random() * 0.4);
 
-    // Get current mouse position (approximate)
-    const currentX = box.x - 100;
-    const currentY = box.y - 100;
+    // Get ACTUAL current mouse position (tracked)
+    const currentPos = this.getCurrentMousePosition(viewport);
 
-    // Move mouse to element
-    await this.moveMouseHumanLike(page, currentX, currentY, targetX, targetY);
+    // Move mouse to element from actual current position
+    await this.moveMouseHumanLike(page, currentPos.x, currentPos.y, targetX, targetY);
 
     // Random hover time before click
     await this.randomDelay(100, 300);
 
     // Sometimes miss and correct
     if (Math.random() < 0.1) {
-      await page.mouse.move(targetX + 10, targetY + 5);
+      const missX = targetX + (Math.random() - 0.5) * 20;
+      const missY = targetY + (Math.random() - 0.5) * 20;
+      await page.mouse.move(missX, missY);
+      this.updateMousePosition(missX, missY);
       await this.randomDelay(50, 150);
       await page.mouse.move(targetX, targetY);
+      this.updateMousePosition(targetX, targetY);
     }
 
     // Mouse down, wait, mouse up (not instant click)
