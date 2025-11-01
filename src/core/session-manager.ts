@@ -3,6 +3,7 @@ import type { ScraperSession, GeneratedFingerprint, Proxy, Detection, StealthCon
 import { FingerprintGenerator } from './fingerprint.js';
 import { ProxyManager } from './proxy-manager.js';
 import { TLSAndHTTP2Manager } from '../advanced/tls-http2-fingerprint.js';
+import { GeoTimezoneCorrelator } from '../advanced/geo-timezone-correlator.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
@@ -41,12 +42,27 @@ export class SessionManager {
     }
 
     const sessionId = uuidv4();
-    const fingerprint = this.fingerprintGenerator.generate();
 
     // Determine proxy
     let proxy: Proxy | null = null;
     if (options.useProxy && this.proxyManager) {
       proxy = options.specificProxy || this.proxyManager.getBestProxy();
+    }
+
+    // Generate fingerprint
+    const fingerprint = this.fingerprintGenerator.generate();
+
+    // Correlate timezone and locale with proxy geography
+    if (proxy && (proxy.country || proxy.city)) {
+      const correlatedSettings = GeoTimezoneCorrelator.getCorrelatedSettings({
+        country: proxy.country,
+        city: proxy.city,
+        locale: fingerprint.language,
+      });
+
+      // Update fingerprint with correlated timezone and locale
+      fingerprint.timezone = correlatedSettings.timezone;
+      fingerprint.language = correlatedSettings.locale;
     }
 
     // Launch browser with proxy if available
@@ -61,7 +77,7 @@ export class SessionManager {
 
     const browser = await chromium.launch(launchOptions);
 
-    // Create context with fingerprint
+    // Create context with fingerprint (now with correlated timezone)
     const contextOptions: any = {
       userAgent: fingerprint.userAgent,
       viewport: fingerprint.viewport,

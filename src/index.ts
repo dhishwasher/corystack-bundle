@@ -20,6 +20,7 @@ export { UserProfileManager } from './advanced/user-profile.js';
 export type { UserProfile, UserBehaviorProfile, ProfileManagerConfig } from './advanced/user-profile.js';
 export { TLSAndHTTP2Manager, TLS_HTTP2_PROFILES } from './advanced/tls-http2-fingerprint.js';
 export type { TLSProfile } from './advanced/tls-http2-fingerprint.js';
+export { GeoTimezoneCorrelator } from './advanced/geo-timezone-correlator.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
