@@ -24,6 +24,8 @@ export { GeoTimezoneCorrelator } from './advanced/geo-timezone-correlator.js';
 export { BrowserTimingManager } from './advanced/browser-timing.js';
 export { FontFingerprintManager, PLATFORM_FONTS } from './advanced/font-fingerprint.js';
 export type { FontCategories } from './advanced/font-fingerprint.js';
+export { ScreenCorrelationManager, SCREEN_PROFILES } from './advanced/screen-correlation.js';
+export type { ScreenProfile } from './advanced/screen-correlation.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';

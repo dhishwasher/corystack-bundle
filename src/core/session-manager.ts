@@ -6,6 +6,7 @@ import { TLSAndHTTP2Manager } from '../advanced/tls-http2-fingerprint.js';
 import { GeoTimezoneCorrelator } from '../advanced/geo-timezone-correlator.js';
 import { BrowserTimingManager } from '../advanced/browser-timing.js';
 import { FontFingerprintManager } from '../advanced/font-fingerprint.js';
+import { ScreenCorrelationManager } from '../advanced/screen-correlation.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionManager {
@@ -53,6 +54,13 @@ export class SessionManager {
 
     // Generate fingerprint
     const fingerprint = this.fingerprintGenerator.generate();
+
+    // Create screen correlation manager and get correlated viewport
+    const screenManager = new ScreenCorrelationManager(fingerprint.platform);
+    const correlatedViewport = screenManager.getCorrelatedViewport();
+
+    // Update fingerprint viewport with correlated dimensions
+    fingerprint.viewport = correlatedViewport;
 
     // Correlate timezone and locale with proxy geography
     if (proxy && (proxy.country || proxy.city)) {
@@ -109,6 +117,9 @@ export class SessionManager {
     // Apply font fingerprint protection
     const fontManager = new FontFingerprintManager(fingerprint.platform);
     await fontManager.injectFontOverride(context);
+
+    // Apply screen/window correlation
+    await screenManager.injectScreenOverrides(context);
 
     const session: ScraperSession = {
       id: sessionId,
