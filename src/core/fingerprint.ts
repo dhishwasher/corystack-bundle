@@ -403,20 +403,158 @@ export class FingerprintGenerator {
   }
 
   /**
-   * Inject WebRTC leak prevention
+   * Inject improved WebRTC leak prevention
    */
   private async injectWebRTCEvasion(context: BrowserContext): Promise<void> {
     if (!this.config.preventWebRTC) return;
 
     await context.addInitScript(() => {
-      // Block WebRTC IP leaks
+      // Instead of setting to undefined (detectable), mock the APIs properly
+
+      // Mock MediaDevices with realistic implementation
+      const mockMediaDevices = {
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => true,
+        ondevicechange: null,
+        enumerateDevices: async () => Promise.resolve([]),
+        getSupportedConstraints: () => ({
+          aspectRatio: true,
+          autoGainControl: true,
+          brightness: true,
+          channelCount: true,
+          colorTemperature: true,
+          contrast: true,
+          deviceId: true,
+          echoCancellation: true,
+          exposureCompensation: true,
+          exposureMode: true,
+          facingMode: true,
+          focusDistance: true,
+          focusMode: true,
+          frameRate: true,
+          groupId: true,
+          height: true,
+          iso: true,
+          latency: true,
+          noiseSuppression: true,
+          pan: true,
+          pointsOfInterest: true,
+          sampleRate: true,
+          sampleSize: true,
+          saturation: true,
+          sharpness: true,
+          tilt: true,
+          torch: true,
+          videoKind: true,
+          volume: true,
+          whiteBalanceMode: true,
+          width: true,
+          zoom: true,
+        }),
+        getUserMedia: () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')),
+        getDisplayMedia: () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')),
+      };
+
       Object.defineProperty(navigator, 'mediaDevices', {
-        get: () => undefined,
+        get: () => mockMediaDevices,
+        configurable: true,
       });
 
-      (window as any).RTCPeerConnection = undefined;
-      (window as any).RTCDataChannel = undefined;
-      (window as any).RTCSessionDescription = undefined;
+      // Mock RTCPeerConnection to prevent IP leaks
+      const MockRTCPeerConnection = function(this: any, config?: any) {
+        this.localDescription = null;
+        this.remoteDescription = null;
+        this.signalingState = 'stable';
+        this.iceGatheringState = 'new';
+        this.iceConnectionState = 'new';
+        this.connectionState = 'new';
+        this.canTrickleIceCandidates = null;
+        this.onicecandidate = null;
+        this.ontrack = null;
+        this.ondatachannel = null;
+        this.onnegotiationneeded = null;
+        this.onsignalingstatechange = null;
+        this.oniceconnectionstatechange = null;
+        this.onicegatheringstatechange = null;
+        this.onconnectionstatechange = null;
+
+        // Mock methods
+        this.createOffer = () => Promise.reject(new DOMException('Operation failed', 'OperationError'));
+        this.createAnswer = () => Promise.reject(new DOMException('Operation failed', 'OperationError'));
+        this.setLocalDescription = () => Promise.reject(new DOMException('Operation failed', 'OperationError'));
+        this.setRemoteDescription = () => Promise.reject(new DOMException('Operation failed', 'OperationError'));
+        this.addIceCandidate = () => Promise.reject(new DOMException('Operation failed', 'OperationError'));
+        this.getStats = () => Promise.resolve(new Map());
+        this.getTransceivers = () => [];
+        this.getSenders = () => [];
+        this.getReceivers = () => [];
+        this.addTrack = () => { throw new DOMException('Operation failed', 'OperationError'); };
+        this.removeTrack = () => {};
+        this.addTransceiver = () => { throw new DOMException('Operation failed', 'OperationError'); };
+        this.createDataChannel = () => { throw new DOMException('Operation failed', 'OperationError'); };
+        this.close = () => {};
+      };
+
+      // Replace RTCPeerConnection with mock
+      (window as any).RTCPeerConnection = MockRTCPeerConnection;
+      (window as any).webkitRTCPeerConnection = MockRTCPeerConnection;
+      (window as any).mozRTCPeerConnection = MockRTCPeerConnection;
+
+      // Mock RTCSessionDescription
+      const MockRTCSessionDescription = function(this: any, descriptionInitDict?: any) {
+        this.type = descriptionInitDict?.type || '';
+        this.sdp = descriptionInitDict?.sdp || '';
+        this.toJSON = () => ({ type: this.type, sdp: this.sdp });
+      };
+      (window as any).RTCSessionDescription = MockRTCSessionDescription;
+
+      // Mock RTCIceCandidate
+      const MockRTCIceCandidate = function(this: any, candidateInitDict?: any) {
+        this.candidate = candidateInitDict?.candidate || '';
+        this.sdpMid = candidateInitDict?.sdpMid || null;
+        this.sdpMLineIndex = candidateInitDict?.sdpMLineIndex || null;
+        this.foundation = null;
+        this.component = null;
+        this.priority = null;
+        this.address = null;
+        this.protocol = null;
+        this.port = null;
+        this.type = null;
+        this.tcpType = null;
+        this.relatedAddress = null;
+        this.relatedPort = null;
+        this.usernameFragment = null;
+        this.toJSON = () => ({
+          candidate: this.candidate,
+          sdpMid: this.sdpMid,
+          sdpMLineIndex: this.sdpMLineIndex,
+        });
+      };
+      (window as any).RTCIceCandidate = MockRTCIceCandidate;
+
+      // Mock RTCDataChannel
+      const MockRTCDataChannel = function(this: any) {
+        this.label = '';
+        this.ordered = true;
+        this.maxPacketLifeTime = null;
+        this.maxRetransmits = null;
+        this.protocol = '';
+        this.negotiated = false;
+        this.id = null;
+        this.readyState = 'closed';
+        this.bufferedAmount = 0;
+        this.bufferedAmountLowThreshold = 0;
+        this.binaryType = 'blob';
+        this.onopen = null;
+        this.onclose = null;
+        this.onerror = null;
+        this.onmessage = null;
+        this.onbufferedamountlow = null;
+        this.send = () => {};
+        this.close = () => {};
+      };
+      (window as any).RTCDataChannel = MockRTCDataChannel;
     });
   }
 
