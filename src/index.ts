@@ -14,6 +14,8 @@ export { TLSFingerprintManager, TLS_PROFILES, createCustomTLSProfile } from './c
 export { MonitoringSystem, AlertingSystem } from './core/monitoring.js';
 export { CaptchaSolver } from './advanced/captcha-solver.js';
 export type { CaptchaSolverConfig, CaptchaTask, CaptchaResult } from './advanced/captcha-solver.js';
+export { ResidentialProxyManager } from './advanced/residential-proxy-manager.js';
+export type { ResidentialProxyProvider, ResidentialProxyConfig } from './advanced/residential-proxy-manager.js';
 
 // Security features
 export { AuthenticationManager } from './security/auth.js';
